@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Oscilaciones - Puente Q'eswachaka</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin: 25px 0 15px;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 8px;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            margin: 20px 0 10px;
+            color: var(--accent);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--light);
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .team-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .team-member {
+            text-align: center;
+            padding: 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .team-member h4 {
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+        
+        .equation-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid var(--accent);
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .parameters-table th, .parameters-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .parameters-table th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--secondary);
+        }
+        
+        .parameters-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .graph-container {
+            height: 300px;
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bridge-animation {
+            height: 150px;
+            margin: 30px 0;
+            position: relative;
+            background: linear-gradient(to bottom, #1a5276, #2c3e50);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .bridge-cable {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 80px;
+            border-bottom: 3px solid var(--light);
+            border-radius: 50% 50% 0 0;
+        }
+        
+        .bridge-deck {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background: var(--warning);
+            border-radius: 5px;
+        }
+        
+        .phase-diagram {
+            height: 250px;
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .tab.active {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .solution-steps {
+            counter-reset: step;
+        }
+        
+        .solution-step {
+            margin-bottom: 25px;
+            padding-left: 60px;
+            position: relative;
+        }
+        
+        .solution-step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .conclusion-box {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .references {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .reference-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .team-info {
+                flex-direction: column;
+            }
+            
+            .team-member {
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Predicción de Oscilaciones</h1>
+            <div class="subtitle">Puente Q'eswachaka - Modelamiento Matemático</div>
+            <div class="team-info">
+                <div class="team-member">
+                    <h4>Docente</h4>
+                    <p>Ruddy Dario Reyes Contreras</p>
+                </div>
+                <div class="team-member">
+                    <h4>Asignatura</h4>
+                    <p>Ecuaciones Diferenciales</p>
+                </div>
+                <div class="team-member">
+                    <h4>Integrante</h4>
+                    <p>Emerson Apaza Quispe</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="introduction">Introducción</div>
+            <div class="tab" data-tab="model">Modelo Matemático</div>
+            <div class="tab" data-tab="solution">Solución</div>
+            <div class="tab" data-tab="simulation">Simulación</div>
+            <div class="tab" data-tab="conclusion">Conclusión</div>
+        </div>
+        
+        <div class="tab-content active" id="introduction">
+            <div class="card">
+                <h2>Etapa de Ideación</h2>
+                <p>La idea general consiste en describir la dinámica de un sistema físico mediante la relación entre una variable dependiente, que representa el fenómeno observado (por ejemplo, el desplazamiento vertical de un puente colgante), y una variable independiente, como el tiempo.</p>
+                
+                <h3>Pregunta Esencial</h3>
+                <p>¿Cómo obtener el modelo matemático que describe la dinámica entre las dos variables?</p>
+                
+                <h3>Elementos Claves</h3>
+                <ul>
+                    <li><strong>Variable dependiente:</strong> Desplazamiento vertical (u) del puente</li>
+                    <li><strong>Variable independiente:</strong> Tiempo (t)</li>
+                    <li><strong>Dinámica:</strong> Oscilaciones gobernadas por las leyes del movimiento armónico</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>Parámetros del Puente Q'eswachaka</h2>
+                <table class="parameters-table">
+                    <thead>
+                        <tr>
+                            <th>Parámetro</th>
+                            <th>Valor</th>
+                            <th>Unidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Longitud del puente</td>
+                            <td>28</td>
+                            <td>m</td>
+                        </tr>
+                        <tr>
+                            <td>Masa por metro</td>
+                            <td>19.85</td>
+                            <td>kg/m</td>
+                        </tr>
+                        <tr>
+                            <td>Rigidez estructural</td>
+                            <td>224,284</td>
+                            <td>N/m</td>
+                        </tr>
+                        <tr>
+                            <td>Coeficiente de amortiguamiento</td>
+                            <td>1,000</td>
+                            <td>Ns/m</td>
+                        </tr>
+                        <tr>
+                            <td>Amplitud de fuerza externa</td>
+                            <td>1,000</td>
+                            <td>N</td>
+                        </tr>
+                        <tr>
+                            <td>Frecuencia angular</td>
+                            <td>2π</td>
+                            <td>rad/s</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="model">
+            <div class="card">
+                <h2>Ecuación Diferencial del Sistema</h2>
+                <p>La dinámica del puente se modela mediante una ecuación diferencial lineal de segundo orden que representa un sistema oscilatorio forzado y amortiguado:</p>
+                
+                <div class="equation-box">
+                    m d²u/dt² + c du/dt + k u = F₀ cos(ωt)
+                </div>
+                
+                <p>Donde:</p>
+                <ul>
+                    <li><strong>m:</strong> masa del puente o de una sección representativa</li>
+                    <li><strong>c:</strong> coeficiente de amortiguamiento</li>
+                    <li><strong>k:</strong> constante de rigidez estructural</li>
+                    <li><strong>F₀ cos(ωt):</strong> fuerza externa aplicada sobre el puente</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>Interpretación Física</h2>
+                <p>Esta ecuación describe cómo el sistema responde ante perturbaciones externas, permitiendo analizar fenómenos como:</p>
+                
+                <div class="bridge-animation" id="bridgeAnimation">
+                    <div class="bridge-cable"></div>
+                    <div class="bridge-deck"></div>
+                </div>
+                
+                <ul>
+                    <li><strong>Resonancia:</strong> Cuando la frecuencia de la fuerza externa coincide con la frecuencia natural del sistema</li>
+                    <li><strong>Amortiguamiento:</strong> Reducción gradual de las oscilaciones debido a la fricción</li>
+                    <li><strong>Estabilidad:</strong> Capacidad del sistema para regresar a su estado de equilibrio</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="solution">
+            <div class="card">
+                <h2>Resolución de la Ecuación Diferencial</h2>
+                
+                <div class="solution-steps">
+                    <div class="solution-step">
+                        <h3>Paso 1: Solución Homogénea (Yₕ)</h3>
+                        <p>Resolvemos la ecuación homogénea (sin fuerza externa):</p>
+                        <div class="equation-box">
+                            m d²Yₕ/dt² + c dYₕ/dt + k Yₕ = 0
+                        </div>
+                        <p>Obtenemos raíces complejas: r = -25.19 ± 103.27i</p>
+                        <p>Solución general homogénea:</p>
+                        <div class="equation-box">
+                            Yₕ(t) = e^(-25.19t) [C₁ cos(103.27t) + C₂ sin(103.27t)]
+                        </div>
+                    </div>
+                    
+                    <div class="solution-step">
+                        <h3>Paso 2: Solución Particular (Yₚ)</h3>
+                        <p>Para la ecuación no homogénea (con fuerza externa):</p>
+                        <div class="equation-box">
+                            m d²Yₚ/dt² + c dYₚ/dt + k Yₚ = F₀ cos(ωt)
+                        </div>
+                        <p>Proponemos: Yₚ(t) = A cos(ωt) + B sin(ωt)</p>
+                        <p>Obtenemos: A ≈ 0.00447 m, B ≈ 0.0001256</p>
+                        <p>Solución particular:</p>
+                        <div class="equation-box">
+                            Yₚ(t) = 0.00447 cos(2πt) + 0.0001256 sin(2πt)
+                        </div>
+                    </div>
+                    
+                    <div class="solution-step">
+                        <h3>Paso 3: Solución General</h3>
+                        <p>Combinamos ambas soluciones:</p>
+                        <div class="equation-box">
+                            Y(t) = Yₕ(t) + Yₚ(t)
+                        </div>
+                        <p>Aplicamos condiciones iniciales Y(0) = 0 y Y'(0) = 0</p>
+                        <p>Solución final:</p>
+                        <div class="equation-box">
+                            Y(t) = e^(-25.19t) [-0.00447 cos(103.27t) - 0.001098 sin(103.27t)] + 0.00447 cos(2πt) + 0.0001256 sin(2πt)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Gráfico de la Solución</h2>
+                <div class="graph-container" id="solutionGraph">
+                    <!-- El gráfico se generará con JavaScript -->
+                </div>
+                <p>Interpretación: La respuesta transitoria (exponencial decreciente) desaparece rápidamente, dejando únicamente la respuesta estacionaria (oscilaciones periódicas).</p>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="simulation">
+            <div class="card">
+                <h2>Simulador Interactivo</h2>
+                <p>Se ha desarrollado un prototipo de simulación que implementa el modelo matemático de oscilaciones del Puente Q'eswachaka.</p>
+                
+                <h3>Características Principales</h3>
+                <ul>
+                    <li><strong>Simulación en Tiempo Real:</strong> Resolución numérica usando el método Runge-Kutta de 4to orden</li>
+                    <li><strong>Visualización Múltiple:</strong> Gráficos de desplazamiento, velocidad y fuerza vs tiempo</li>
+                    <li><strong>Parámetros Configurables:</strong> Masa, amortiguamiento, rigidez, fuerza externa</li>
+                </ul>
+                
+                <div class="phase-diagram" id="phaseDiagram">
+                    <!-- Diagrama de fase se generará con JavaScript -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Validación del Modelo</h2>
+                <p>El prototipo implementa la ecuación diferencial exacta planteada:</p>
+                <div class="equation-box">
+                    m d²Y/dt² + c dY/dt + k Y = F₀ cos(ωt)
+                </div>
+                <p>El simulador constituye una evidencia tangible de la aplicación práctica del modelamiento matemático propuesto, cumpliendo con los objetivos educativos y técnicos del proyecto.</p>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="conclusion">
+            <div class="conclusion-box">
+                <h2>Conclusión</h2>
+                <p>Este proyecto demostró con éxito la capacidad de modelar matemáticamente las oscilaciones de un puente colgante utilizando una ecuación diferencial de segundo orden que considera la masa, la rigidez, el amortiguamiento y las fuerzas externas periódicas.</p>
+                <p>El modelo, validado a través de una simulación interactiva desarrollada por el equipo, permite analizar el comportamiento del puente bajo diferentes condiciones, incluyendo variaciones en la fuerza del viento, la rigidez estructural y el nivel de amortiguamiento.</p>
+                <p>El proyecto destaca la utilidad de las ecuaciones diferenciales en la resolución de problemas de ingeniería y la importancia del modelado matemático para la predicción y prevención de situaciones de riesgo.</p>
+            </div>
+            
+            <div class="card">
+                <h2>Bibliografía</h2>
+                <div class="references">
+                    <div class="reference-item">
+                        <p>Boyce, W. E., & DiPrima, R. C. (2017). <em>Ecuaciones diferenciales y problemas con valores en la frontera</em>. México: Limusa.</p>
+                    </div>
+                    <div class="reference-item">
+                        <p>Zill, D. G. (2018). <em>Ecuaciones diferenciales con aplicaciones de modelado</em>. México: Cengage Learning.</p>
+                    </div>
+                    <div class="reference-item">
+                        <p>Kreyszig, E. (2011). <em>Matemáticas avanzadas para ingeniería</em>. México: Limusa.</p>
+                    </div>
+                    <div class="reference-item">
+                        <p>Den Hartog, J. P. (1985). <em>Mechanical Vibrations</em>. New York: Dover Publications.</p>
+                    </div>
+                    <div class="reference-item">
+                        <p>Rao, S. S. (2017). <em>Mechanical Vibrations</em>. Boston: Pearson.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Proyecto: Predicción de Oscilaciones 'Puente Q'eswachaka'</p>
+            <p>Grupo Los Dibujitos - Ecuaciones Diferenciales</p>
+            <p>Año de la recuperación y consolidación de la economía peruana</p>
+        </footer>
+    </div>
+
+    <script>
+        // Navegación por pestañas
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remover clase active de todas las pestañas y contenidos
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Agregar clase active a la pestaña clickeada y su contenido
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Animación del puente
+        const bridgeDeck = document.querySelector('.bridge-deck');
+        let oscillation = 0;
+        
+        function animateBridge() {
+            oscillation += 0.05;
+            const displacement = Math.sin(oscillation) * 10;
+            bridgeDeck.style.transform = `translateY(${displacement}px)`;
+            requestAnimationFrame(animateBridge);
+        }
+        
+        animateBridge();
+        
+        // Gráfico de la solución (simulación)
+        const solutionGraph = document.getElementById('solutionGraph');
+        const phaseDiagram = document.getElementById('phaseDiagram');
+        
+        // Crear canvas para el gráfico de solución
+        const solutionCanvas = document.createElement('canvas');
+        solutionCanvas.width = solutionGraph.clientWidth;
+        solutionCanvas.height = solutionGraph.clientHeight;
+        solutionGraph.appendChild(solutionCanvas);
+        
+        const ctx = solutionCanvas.getContext('2d');
+        
+        // Crear canvas para el diagrama de fase
+        const phaseCanvas = document.createElement('canvas');
+        phaseCanvas.width = phaseDiagram.clientWidth;
+        phaseCanvas.height = phaseDiagram.clientHeight;
+        phaseDiagram.appendChild(phaseCanvas);
+        
+        const phaseCtx = phaseCanvas.getContext('2d');
+        
+        // Dibujar gráfico de solución
+        function drawSolutionGraph() {
+            const width = solutionCanvas.width;
+            const height = solutionCanvas.height;
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Dibujar ejes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(50, height / 2);
+            ctx.lineTo(width - 50, height / 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, height - 50);
+            ctx.stroke();
+            
+            // Etiquetas de ejes
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText('Tiempo (s)', width / 2, height - 20);
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Desplazamiento (m)', 0, 0);
+            ctx.restore();
+            
+            // Dibujar función de solución
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const scaleX = (width - 100) / 2; // 2 segundos
+            const scaleY = (height - 100) / 0.01; // ±0.005 m
+            
+            for (let t = 0; t <= 2; t += 0.01) {
+                // Calcular Y(t) según la solución obtenida
+                const Yh = Math.exp(-25.19 * t) * (-0.00447 * Math.cos(103.27 * t) - 0.001098 * Math.sin(103.27 * t));
+                const Yp = 0.00447 * Math.cos(2 * Math.PI * t) + 0.0001256 * Math.sin(2 * Math.PI * t);
+                const Y = Yh + Yp;
+                
+                const x = 50 + t * scaleX;
+                const y = height / 2 - Y * scaleY;
+                
+                if (t === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+        }
+        
+        // Dibujar diagrama de fase
+        function drawPhaseDiagram() {
+            const width = phaseCanvas.width;
+            const height = phaseCanvas.height;
+            
+            // Limpiar canvas
+            phaseCtx.clearRect(0, 0, width, height);
+            
+            // Dibujar ejes
+            phaseCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            phaseCtx.lineWidth = 1;
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(width / 2, 0);
+            phaseCtx.lineTo(width / 2, height);
+            phaseCtx.stroke();
+            
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(0, height / 2);
+            phaseCtx.lineTo(width, height / 2);
+            phaseCtx.stroke();
+            
+            // Etiquetas de ejes
+            phaseCtx.fillStyle = 'white';
+            phaseCtx.font = '12px Arial';
+            phaseCtx.fillText('Desplazamiento (m)', width / 2, height - 10);
+            phaseCtx.save();
+            phaseCtx.translate(10, height / 2);
+            phaseCtx.rotate(-Math.PI / 2);
+            phaseCtx.fillText('Velocidad (m/s)', 0, 0);
+            phaseCtx.restore();
+            
+            // Dibujar trayectoria de fase
+            phaseCtx.strokeStyle = '#e74c3c';
+            phaseCtx.lineWidth = 2;
+            phaseCtx.beginPath();
+            
+            const scaleX = (width - 100) / 0.01; // ±0.005 m
+            const scaleY = (height - 100) / 0.5; // ±0.25 m/s
+            
+            for (let t = 0; t <= 2; t += 0.01) {
+                // Calcular Y(t) y Y'(t) según la solución obtenida
+                const alpha = -25.19;
+                const theta = 103.27;
+                const omega = 2 * Math.PI;
+                
+                // Y(t)
+                const Yh = Math.exp(alpha * t) * (-0.00447 * Math.cos(theta * t) - 0.001098 * Math.sin(theta * t));
+                const Yp = 0.00447 * Math.cos(omega * t) + 0.0001256 * Math.sin(omega * t);
+                const Y = Yh + Yp;
+                
+                // Y'(t) - derivada aproximada
+                const tPrev = Math.max(0, t - 0.01);
+                const YhPrev = Math.exp(alpha * tPrev) * (-0.00447 * Math.cos(theta * tPrev) - 0.001098 * Math.sin(theta * tPrev));
+                const YpPrev = 0.00447 * Math.cos(omega * tPrev) + 0.0001256 * Math.sin(omega * tPrev);
+                const YPrev = YhPrev + YpPrev;
+                
+                const Yprime = (Y - YPrev) / 0.01;
+                
+                const x = width / 2 + Y * scaleX;
+                const y = height / 2 - Yprime * scaleY;
+                
+                if (t === 0) {
+                    phaseCtx.moveTo(x, y);
+                } else {
+                    phaseCtx.lineTo(x, y);
+                }
+            }
+            
+            phaseCtx.stroke();
+        }
+        
+        // Dibujar gráficos cuando la pestaña correspondiente esté activa
+        function checkAndDrawGraphs() {
+            if (document.getElementById('solution').classList.contains('active')) {
+                drawSolutionGraph();
+            }
+            
+            if (document.getElementById('simulation').classList.contains('active')) {
+                drawPhaseDiagram();
+            }
+        }
+        
+        // Verificar cada 500ms si debemos dibujar los gráficos
+        setInterval(checkAndDrawGraphs, 500);
+        
+        // Dibujar gráficos inicialmente
+        drawSolutionGraph();
+        drawPhaseDiagram();
+        
+        // Redibujar gráficos cuando cambie el tamaño de la ventana
+        window.addEventListener('resize', () => {
+            solutionCanvas.width = solutionGraph.clientWidth;
+            solutionCanvas.height = solutionGraph.clientHeight;
+            
+            phaseCanvas.width = phaseDiagram.clientWidth;
+            phaseCanvas.height = phaseDiagram.clientHeight;
+            
+            drawSolutionGraph();
+            drawPhaseDiagram();
+        });
+    </script>
+</body>
+</html>
